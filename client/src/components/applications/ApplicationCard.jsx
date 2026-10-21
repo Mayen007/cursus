@@ -61,13 +61,13 @@ export default function ApplicationCard({ application, onDelete, onEdit, onStatu
       <dl className="mt-3 space-y-1 border-t border-slate/10 pt-3 text-[11px]">
         {application.platform && (
           <div className="flex gap-2">
-            <dt className="text-slate">Platform</dt>
+            <dt className="text-slate font-bold">Platform:</dt>
             <dd>{application.platform}</dd>
           </div>
         )}
         {application.followUpDate && (
           <div className="flex gap-2">
-            <dt className="text-slate">Follow up</dt>
+            <dt className="text-slate font-bold">Follow up:</dt>
             <dd>{formatDate(application.followUpDate)}</dd>
           </div>
         )}

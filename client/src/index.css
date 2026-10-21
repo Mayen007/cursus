@@ -1,0 +1,89 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-ink: 14 33 31;
+  --color-paper: 244 245 241;
+  --color-surface: 255 255 255;
+  --color-match: 45 190 139;
+  --color-gap: 240 86 58;
+  --color-score: 242 174 46;
+  --color-slate: 75 95 98;
+  color-scheme: light;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: rgb(var(--color-ink));
+  background: rgb(var(--color-paper));
+}
+
+:root.dark-theme {
+  --color-ink: 229 237 231;
+  --color-paper: 16 28 27;
+  --color-surface: 27 43 41;
+  --color-match: 80 211 159;
+  --color-gap: 255 121 99;
+  --color-score: 242 174 46;
+  --color-slate: 165 185 181;
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 3px solid rgb(var(--color-score));
+  outline-offset: 3px;
+}
+
+.auth-input {
+  width: 100%;
+  border: 1px solid rgb(var(--color-slate) / 35%);
+  border-radius: 5px;
+  background: rgb(var(--color-surface));
+  padding: 9px 10px;
+  color: rgb(var(--color-ink));
+  font: inherit;
+  font-size: 14px;
+}
+
+.auth-input::placeholder {
+  color: rgb(var(--color-slate));
+  opacity: 0.8;
+}
+
+@layer utilities {
+  .text-xs {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .text-sm {
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  .text-\[9px\] {
+    font-size: 0.6875rem;
+    line-height: 1rem;
+  }
+
+  .text-\[10px\] {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  .text-\[11px\] {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+}

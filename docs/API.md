@@ -13,9 +13,12 @@ The root URL and `/api/health` use the same health handler.
 | GET    | `/health` | Public | `{ "status": "ok", "app": "<APP_NAME>" }` |
 
 Authentication requests are rate-limited at 10 attempts per client IP every 15 minutes.
-Passwords must be 8–128 characters. Sessions use signed bearer tokens that expire after seven
-days. The browser signs out by clearing its session storage; a copied token remains valid until
-expiry.
+New passwords must be at least 8 characters and no more than 72 UTF-8 bytes, matching bcrypt's
+input limit. Passwords are hashed directly with bcrypt. Existing scrypt hashes and hashes from the
+earlier pre-hashed bcrypt implementation remain verifiable; compatible passwords are upgraded to
+direct bcrypt hashes after a successful login. Sessions use signed bearer tokens that expire after
+seven days. The browser signs out by clearing its session storage; a copied token remains valid
+until expiry.
 
 | Method | Path                | Access        | Response                                                        |
 | ------ | ------------------- | ------------- | --------------------------------------------------------------- |
@@ -71,11 +74,12 @@ the verified token and every read, update, or delete is scoped by that user ID.
 | POST   | `/tailoring/save`          | Authenticated |
 
 - Applications support list, create, edit, status updates with status history, and confirmed
-  deletion. Deleting an application removes its analyses and unlinks saved CV copies.
+  deletion. The application response includes each status transition and timestamp. Deleting an
+  application removes its analyses and unlinks saved CV copies.
 - `POST /resumes/base` accepts one PDF or DOCX file up to 5 MB in memory. It stores extracted
   text only; the uploaded file is not written to disk. DOCX expanded content is limited to 20 MB.
   CVs with fewer than 100 extracted characters are rejected.
-- `GET /resumes` returns the current base CV and saved CV copies with their linked application.
+- `GET /resumes` returns the current base CV and unchanged saved analysis snapshots with their linked application.
   Replacing a base CV keeps the old text as the source for existing copies.
 - `POST /tailoring/analyze` requires an owned application and saved base CV. It uses the
   application's saved job description unless a replacement is supplied in the request. The

@@ -20,3 +20,15 @@
   review and confirm changes before a tailored CV is produced.
 - Schema indexes support unique email, one base CV per user, user-scoped reads, and resume ordering;
   indexes do not add collection fields.
+
+## Password hashing
+
+- Use the `bcrypt` package to hash the password directly, as specified by the proposal. New
+  passwords must fit bcrypt's 72-byte input limit to avoid accepting distinct passwords that bcrypt
+  would truncate to the same hash.
+- Existing scrypt hashes and hashes from the earlier SHA-256-prehashed bcrypt implementation remain
+  verifiable. Compatible passwords are upgraded to direct bcrypt hashes after successful login;
+  passwords exceeding 72 UTF-8 bytes retain their existing hash until the user changes the password.
+- Until an AI provider is chosen, genuine CV rewriting and per-suggestion confirmation remain
+  deferred. The save endpoint currently stores an unchanged analysis snapshot and is described as
+  such in the API and UI.

@@ -151,7 +151,7 @@ export default function AuthForm({ mode }) {
           <input
             autoComplete={isRegistering ? "new-password" : "current-password"}
             className="auth-input"
-            maxLength={isRegistering ? 128 : undefined}
+            maxLength={isRegistering ? 72 : undefined}
             id="password"
             minLength={isRegistering ? 8 : undefined}
             name="password"
@@ -160,7 +160,9 @@ export default function AuthForm({ mode }) {
             type={isPasswordVisible ? "text" : "password"}
           />
           {isRegistering && (
-            <span className="mt-1.5 block text-xs text-slate">Use at least 8 characters.</span>
+            <span className="mt-1.5 block text-xs text-slate">
+              Use at least 8 characters and no more than 72 UTF-8 bytes.
+            </span>
           )}
         </label>
 

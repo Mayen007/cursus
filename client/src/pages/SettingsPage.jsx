@@ -278,7 +278,8 @@ export default function SettingsPage() {
                 <div>
                   <p className="font-mono text-sm font-medium">Change password</p>
                   <p className="mt-1 text-xs leading-5 text-slate">
-                    Confirm your current password before choosing a new one.
+                    Confirm your current password. New passwords need at least 8 characters and must
+                    not exceed 72 UTF-8 bytes.
                   </p>
                 </div>
                 <label className="block">
@@ -297,7 +298,7 @@ export default function SettingsPage() {
                     autoComplete="new-password"
                     className="auth-input"
                     minLength={8}
-                    maxLength={128}
+                    maxLength={72}
                     name="newPassword"
                     required
                     type="password"

@@ -11,5 +11,5 @@ uploads/
 .github/
 .prettierignore
 .prettierrc
-.AGENTS.md
-.vscode
+AGENTS.md
+.vscode/

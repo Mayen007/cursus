@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createHash, scryptSync } from "node:crypto";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import request from "supertest";
 
@@ -73,8 +75,11 @@ describe("authentication routes", () => {
       expect.objectContaining({
         fullName: "Ada Lovelace",
         email: "ada@example.com",
-        password: expect.stringMatching(/^scrypt\$/),
+        password: expect.stringMatching(/^\$2[aby]\$/),
       })
+    );
+    expect(await bcrypt.compare(userDetails.password, User.create.mock.calls[0][0].password)).toBe(
+      true
     );
     expect(response.body.user).toEqual({
       id: userId,
@@ -94,11 +99,19 @@ describe("authentication routes", () => {
     const duplicateResponse = await request(app).post("/api/auth/register").send(userDetails);
 
     expect(invalidResponse.status).toBe(400);
-    expect(invalidResponse.body.details).toContain(
-      "Password must be between 8 and 128 characters."
-    );
+    expect(invalidResponse.body.details).toContain("Password must be at least 8 characters.");
     expect(duplicateResponse.status).toBe(409);
     expect(duplicateResponse.body.error).toContain("already exists");
+  });
+
+  it("rejects new passwords that exceed bcrypt's UTF-8 byte limit", async () => {
+    const response = await request(app)
+      .post("/api/auth/register")
+      .send({ ...userDetails, password: "x".repeat(73) });
+
+    expect(response.status).toBe(400);
+    expect(response.body.details).toContain("Password must not exceed 72 UTF-8 bytes.");
+    expect(User.create).not.toHaveBeenCalled();
   });
 
   it("logs in with valid credentials and gives a generic error for a bad password", async () => {
@@ -124,6 +137,51 @@ describe("authentication routes", () => {
     expect(success.body.user.email).toBe(userDetails.email);
     expect(failure.status).toBe(401);
     expect(failure.body.error).toBe("Email or password is incorrect.");
+  });
+
+  it("upgrades a valid legacy scrypt password hash to bcrypt at login", async () => {
+    const salt = Buffer.from("0123456789abcdef");
+    const legacyHash = `scrypt$${salt.toString("hex")}$${scryptSync(
+      userDetails.password,
+      salt,
+      64
+    ).toString("hex")}`;
+    const user = {
+      _id: userId,
+      fullName: userDetails.fullName,
+      email: userDetails.email,
+      password: legacyHash,
+      save: vi.fn().mockResolvedValue(undefined),
+    };
+    mockFindOne(user);
+
+    const response = await request(app)
+      .post("/api/auth/login")
+      .send({ email: userDetails.email, password: userDetails.password });
+
+    expect(response.status).toBe(200);
+    expect(user.password).toMatch(/^\$2[aby]\$/);
+    expect(user.save).toHaveBeenCalledOnce();
+  });
+
+  it("upgrades a valid pre-hashed bcrypt password to direct bcrypt at login", async () => {
+    const legacyDigest = createHash("sha256").update(userDetails.password).digest("hex");
+    const user = {
+      _id: userId,
+      fullName: userDetails.fullName,
+      email: userDetails.email,
+      password: await bcrypt.hash(legacyDigest, 4),
+      save: vi.fn().mockResolvedValue(undefined),
+    };
+    mockFindOne(user);
+
+    const response = await request(app)
+      .post("/api/auth/login")
+      .send({ email: userDetails.email, password: userDetails.password });
+
+    expect(response.status).toBe(200);
+    expect(await bcrypt.compare(userDetails.password, user.password)).toBe(true);
+    expect(user.save).toHaveBeenCalledOnce();
   });
 
   it("validates the token for /me and does not return password data", async () => {
@@ -212,6 +270,16 @@ describe("authentication routes", () => {
     expect(changed.status).toBe(204);
     expect(savedUser.save).toHaveBeenCalledOnce();
     expect(savedUser.password).not.toBe(User.create.mock.calls[0][0].password);
+  });
+
+  it("rejects a password change that exceeds bcrypt's UTF-8 byte limit", async () => {
+    const token = jwt.sign({}, process.env.JWT_SECRET, { subject: userId });
+    const response = await request(app)
+      .patch("/api/auth/me/password")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ currentPassword: "current-password", newPassword: "x".repeat(73) });
+
+    expect(response.status).toBe(400);
   });
 
   it("deletes every user-scoped record after password confirmation", async () => {

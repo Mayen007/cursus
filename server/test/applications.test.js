@@ -122,6 +122,12 @@ describe("application routes", () => {
       fromStatus: "Applied",
       toStatus: "Interview",
     });
+    expect(response.body.application.statusHistory).toHaveLength(2);
+    expect(response.body.application.statusHistory[1]).toMatchObject({
+      fromStatus: "Applied",
+      toStatus: "Interview",
+    });
+    expect(response.body.application.statusHistory[1].changedAt).toEqual(expect.any(String));
   });
 
   it("does not return another user's application", async () => {

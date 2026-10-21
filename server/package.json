@@ -6,10 +6,12 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:system": "vitest run test/system.test.js"
   },
   "dependencies": {
     "@xmldom/xmldom": "^0.8.15",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",

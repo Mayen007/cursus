@@ -59,5 +59,8 @@ npm test
 npm run build
 ```
 
-The current API implements `GET /api/health`. The remaining routes are listed as planned in
-[docs/API.md](./docs/API.md).
+The MongoDB-backed system test uses a dedicated test database. Set `TEST_MONGODB_URI` to a
+disposable MongoDB database, then run `npm run test:system -w server`. The test deletes only
+records belonging to accounts it creates.
+
+See [docs/API.md](./docs/API.md) for implemented and planned API routes.

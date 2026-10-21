@@ -9,6 +9,42 @@ function formatDate(date) {
   }).format(new Date(`${date}T00:00:00`));
 }
 
+function formatStatusDate(date) {
+  return new Intl.DateTimeFormat("en-KE", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(date));
+}
+
+function StatusHistory({ entries }) {
+  if (!entries?.length) return null;
+
+  return (
+    <details className="mt-3 border-t border-slate/10 pt-3">
+      <summary className="min-h-11 cursor-pointer py-3 font-mono text-[11px] underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-score">
+        Status history ({entries.length})
+      </summary>
+      <ol className="space-y-2 pb-2">
+        {entries.map((entry, index) => (
+          <li
+            className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-[11px]"
+            key={`${entry.changedAt}-${index}`}
+          >
+            <span>
+              {entry.fromStatus
+                ? `${entry.fromStatus} → ${entry.toStatus}`
+                : `Started as ${entry.toStatus}`}
+            </span>
+            <time className="text-slate" dateTime={new Date(entry.changedAt).toISOString()}>
+              {formatStatusDate(entry.changedAt)}
+            </time>
+          </li>
+        ))}
+      </ol>
+    </details>
+  );
+}
+
 export default function ApplicationCard({ application, onDelete, onEdit, onStatusChange }) {
   return (
     <article className="border border-slate/20 bg-surface p-4">
@@ -36,6 +72,8 @@ export default function ApplicationCard({ application, onDelete, onEdit, onStatu
           </div>
         )}
       </dl>
+
+      <StatusHistory entries={application.statusHistory} />
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate/10 pt-3">
         <label className="flex min-h-11 items-center gap-2 text-[10px] text-slate">

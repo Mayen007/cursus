@@ -1,11 +1,13 @@
-import { randomBytes, timingSafeEqual, scrypt as scryptCallback } from "node:crypto";
+import { createHash, timingSafeEqual, scrypt as scryptCallback } from "node:crypto";
 import { promisify } from "node:util";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { Application, Recommendation, Resume, User } from "../models/index.js";
 
 const scrypt = promisify(scryptCallback);
-const PASSWORD_HASH_BYTES = 64;
+const BCRYPT_ROUNDS = 12;
+const MAX_BCRYPT_PASSWORD_BYTES = 72;
 const SESSION_DURATION = "7d";
 
 function createError(status, message, details = []) {
@@ -28,8 +30,10 @@ function validateCredentials({ fullName, email, password }, isRegistration = fal
   ) {
     details.push("Enter a valid email address.");
   }
-  if (typeof password !== "string" || password.length < 8 || password.length > 128) {
-    details.push("Password must be between 8 and 128 characters.");
+  if (typeof password !== "string" || password.length < 8) {
+    details.push("Password must be at least 8 characters.");
+  } else if (isRegistration && Buffer.byteLength(password, "utf8") > MAX_BCRYPT_PASSWORD_BYTES) {
+    details.push("Password must not exceed 72 UTF-8 bytes.");
   }
   if (details.length) {
     throw createError(400, "Please check the submitted details.", details);
@@ -37,13 +41,22 @@ function validateCredentials({ fullName, email, password }, isRegistration = fal
 }
 
 async function hashPassword(password) {
-  const salt = randomBytes(16);
-  const derivedKey = await scrypt(password, salt, PASSWORD_HASH_BYTES);
-  return `scrypt$${salt.toString("hex")}$${derivedKey.toString("hex")}`;
+  return bcrypt.hash(password, BCRYPT_ROUNDS);
 }
 
 async function verifyPassword(password, passwordHash) {
   if (typeof passwordHash !== "string") return false;
+  if (/^\$2[aby]\$/.test(passwordHash)) {
+    if (
+      Buffer.byteLength(password, "utf8") <= MAX_BCRYPT_PASSWORD_BYTES &&
+      (await bcrypt.compare(password, passwordHash))
+    ) {
+      return "bcrypt";
+    }
+    const legacyDigest = createHash("sha256").update(password).digest("hex");
+    return (await bcrypt.compare(legacyDigest, passwordHash)) ? "prehashed-bcrypt" : false;
+  }
+
   const match = /^scrypt\$([a-f\d]{32})\$([a-f\d]{128})$/i.exec(passwordHash);
   if (!match) {
     return false;
@@ -52,7 +65,9 @@ async function verifyPassword(password, passwordHash) {
   const [, saltHex, hashHex] = match;
   const expectedKey = Buffer.from(hashHex, "hex");
   const actualKey = await scrypt(password, Buffer.from(saltHex, "hex"), expectedKey.length);
-  return expectedKey.length === actualKey.length && timingSafeEqual(expectedKey, actualKey);
+  return expectedKey.length === actualKey.length && timingSafeEqual(expectedKey, actualKey)
+    ? "scrypt"
+    : false;
 }
 
 function createToken(userId) {
@@ -103,10 +118,17 @@ export async function loginUser(credentials) {
   validateCredentials(credentials);
   const email = credentials.email.trim().toLowerCase();
   const user = await User.findOne({ email }).select("+password");
-  const isPasswordValid = user && (await verifyPassword(credentials.password, user.password));
+  const verification = user && (await verifyPassword(credentials.password, user.password));
 
-  if (!isPasswordValid) {
+  if (!verification) {
     throw createError(401, "Email or password is incorrect.");
+  }
+  if (
+    verification !== "bcrypt" &&
+    Buffer.byteLength(credentials.password, "utf8") <= MAX_BCRYPT_PASSWORD_BYTES
+  ) {
+    user.password = await hashPassword(credentials.password);
+    await user.save();
   }
   return createSession(user);
 }
@@ -152,10 +174,10 @@ export async function changePassword(userId, input) {
     typeof input.currentPassword !== "string" ||
     typeof input.newPassword !== "string" ||
     input.newPassword.length < 8 ||
-    input.newPassword.length > 128
+    Buffer.byteLength(input.newPassword, "utf8") > MAX_BCRYPT_PASSWORD_BYTES
   ) {
     throw createError(400, "Please check the submitted details.", [
-      "Enter your current password and a new password between 8 and 128 characters.",
+      "Enter your current password and a new password of at least 8 characters and no more than 72 UTF-8 bytes.",
     ]);
   }
   const user = await User.findById(userId).select("+password");

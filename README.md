@@ -56,8 +56,10 @@ npm run check    # lint, tests, and production build
 npm run lint:fix
 npm run format
 npm test
-npm run build
 ```
+
+Build the client with `npm run build -w client`, or start the server with
+`npm run start -w server`.
 
 The MongoDB-backed system test uses a dedicated test database. Set `TEST_MONGODB_URI` to a
 disposable MongoDB database, then run `npm run test:system -w server`. The test deletes only

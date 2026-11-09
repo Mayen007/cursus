@@ -7,7 +7,7 @@ export default function AuthPage({ mode }) {
       <section className="flex min-h-dvh items-center justify-center px-5 py-12 sm:px-10 md:px-8 lg:px-12">
         <AuthForm key={mode} mode={mode} />
       </section>
-      <AuthPromotion />
+      <AuthPromotion mode={mode} />
     </main>
   );
 }

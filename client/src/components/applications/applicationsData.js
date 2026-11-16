@@ -1,6 +1,17 @@
-export const APPLICATION_STATUSES = [
-  { id: "Applied", label: "Applied", color: "border-slate" },
-  { id: "Interview", label: "Interview", color: "border-score" },
-  { id: "Offer", label: "Offer", color: "border-match" },
-  { id: "Rejected", label: "Rejected", color: "border-gap" },
-];
+import {
+  APPLICATION_STATUS,
+  APPLICATION_STATUS_VALUES,
+} from "../../../../shared/applicationStatuses.js";
+
+const STATUS_COLORS = {
+  [APPLICATION_STATUS.APPLIED]: "border-slate",
+  [APPLICATION_STATUS.INTERVIEW]: "border-score",
+  [APPLICATION_STATUS.OFFER]: "border-match",
+  [APPLICATION_STATUS.REJECTED]: "border-gap",
+};
+
+export const APPLICATION_STATUSES = APPLICATION_STATUS_VALUES.map((id) => ({
+  id,
+  label: id,
+  color: STATUS_COLORS[id],
+}));

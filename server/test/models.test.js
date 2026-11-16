@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Application, Recommendation, Resume, User } from "../src/models/index.js";
+import { APPLICATION_STATUS_VALUES } from "../../shared/applicationStatuses.js";
 
 describe("data models", () => {
   it("keeps user passwords out of normal query results", () => {
@@ -56,6 +57,18 @@ describe("data models", () => {
     expect(application.applicationStatus).toBe("Applied");
     expect(application.statusHistory).toHaveLength(1);
     expect(application.statusHistory[0].toStatus).toBe("Applied");
+  });
+
+  it("uses the shared statuses for applications and status history", () => {
+    expect(Application.schema.path("applicationStatus").enumValues).toEqual(
+      APPLICATION_STATUS_VALUES
+    );
+    expect(Application.schema.path("statusHistory").schema.path("fromStatus").enumValues).toEqual(
+      APPLICATION_STATUS_VALUES
+    );
+    expect(Application.schema.path("statusHistory").schema.path("toStatus").enumValues).toEqual(
+      APPLICATION_STATUS_VALUES
+    );
   });
 
   it("constrains match scores to integer percentages", async () => {

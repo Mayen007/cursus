@@ -11,6 +11,7 @@ import {
   updateApplicationStatus,
 } from "../lib/applicationApi.js";
 import WorkspaceNavigation from "../components/WorkspaceNavigation.jsx";
+import { DEFAULT_APPLICATION_STATUS } from "../../../shared/applicationStatuses.js";
 
 export default function ApplicationsPage() {
   const [applications, setApplications] = useState([]);
@@ -18,7 +19,7 @@ export default function ApplicationsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [view, setView] = useState("board");
-  const [selectedStatus, setSelectedStatus] = useState("Applied");
+  const [selectedStatus, setSelectedStatus] = useState(DEFAULT_APPLICATION_STATUS);
   const [editingApplication, setEditingApplication] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [applicationToDelete, setApplicationToDelete] = useState(null);

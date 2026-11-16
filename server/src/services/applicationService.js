@@ -1,7 +1,10 @@
 import mongoose from "mongoose";
 import { Application, Recommendation, Resume } from "../models/index.js";
+import {
+  APPLICATION_STATUS_VALUES,
+  DEFAULT_APPLICATION_STATUS,
+} from "../../../shared/applicationStatuses.js";
 
-const APPLICATION_STATUSES = ["Applied", "Interview", "Offer", "Rejected"];
 const APPLICATION_FIELDS = {
   companyName: { required: true, maxLength: 160 },
   jobTitle: { required: true, maxLength: 160 },
@@ -44,7 +47,7 @@ function validateFields(input, isPartial = false) {
   }
 
   if (input.applicationStatus !== undefined) {
-    if (!APPLICATION_STATUSES.includes(input.applicationStatus)) {
+    if (!APPLICATION_STATUS_VALUES.includes(input.applicationStatus)) {
       details.push("applicationStatus is not supported.");
     } else {
       values.applicationStatus = input.applicationStatus;
@@ -93,7 +96,7 @@ export async function listApplications(userId) {
 
 export async function createApplication(userId, input) {
   const values = validateFields(input);
-  const status = values.applicationStatus || "Applied";
+  const status = values.applicationStatus || DEFAULT_APPLICATION_STATUS;
   const application = await Application.create({
     ...values,
     userId,

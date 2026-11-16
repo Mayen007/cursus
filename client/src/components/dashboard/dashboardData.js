@@ -1,8 +1,9 @@
 import { APPLICATION_STATUSES } from "../applications/applicationsData.js";
+import { APPLICATION_STATUS } from "../../../../shared/applicationStatuses.js";
 
 const DAYS_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
 const FOLLOW_UP_WINDOW_DAYS = 7;
-const CLOSED_STATUSES = new Set(["Offer", "Rejected"]);
+const CLOSED_STATUSES = new Set([APPLICATION_STATUS.OFFER, APPLICATION_STATUS.REJECTED]);
 const RECENT_ITEM_LIMIT = 5;
 
 function getLocalDayTimestamp(date) {

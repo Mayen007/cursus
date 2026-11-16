@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { APPLICATION_STATUSES } from "./applicationsData.js";
+import { DEFAULT_APPLICATION_STATUS } from "../../../../shared/applicationStatuses.js";
 
 function getLocalDate() {
   const date = new Date();
@@ -85,7 +86,7 @@ export default function ApplicationDialog({ application, isSaving, onClose, onSa
           <FormField label="Status" name="status">
             <select
               className="auth-input"
-              defaultValue={application?.status || "Applied"}
+              defaultValue={application?.status || DEFAULT_APPLICATION_STATUS}
               name="status"
             >
               {APPLICATION_STATUSES.map(({ id, label }) => (

@@ -1,17 +1,19 @@
 import mongoose from "mongoose";
-
-const applicationStatus = ["Applied", "Interview", "Offer", "Rejected"];
+import {
+  APPLICATION_STATUS_VALUES,
+  DEFAULT_APPLICATION_STATUS,
+} from "../../../shared/applicationStatuses.js";
 
 const statusHistorySchema = new mongoose.Schema(
   {
     fromStatus: {
       type: String,
-      enum: applicationStatus,
+      enum: APPLICATION_STATUS_VALUES,
       default: null,
     },
     toStatus: {
       type: String,
-      enum: applicationStatus,
+      enum: APPLICATION_STATUS_VALUES,
       required: true,
     },
     changedAt: {
@@ -56,9 +58,9 @@ const applicationSchema = new mongoose.Schema({
   },
   applicationStatus: {
     type: String,
-    enum: applicationStatus,
+    enum: APPLICATION_STATUS_VALUES,
     required: true,
-    default: "Applied",
+    default: DEFAULT_APPLICATION_STATUS,
   },
   applicationDate: {
     type: Date,
@@ -72,7 +74,7 @@ const applicationSchema = new mongoose.Schema({
   // Intentional proposal addition: keep status changes here for APP-6.
   statusHistory: {
     type: [statusHistorySchema],
-    default: () => [{ toStatus: "Applied" }],
+    default: () => [{ toStatus: DEFAULT_APPLICATION_STATUS }],
   },
 });
 

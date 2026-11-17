@@ -1,7 +1,7 @@
 # API
 
 The API is served under `/api`. JSON errors use `{ "error": "message", "details": [] }`.
-All data routes other than health and authentication require a verified bearer token.
+Health, registration, and login are public. All other routes require a verified bearer token.
 
 ## Implemented
 
@@ -12,7 +12,7 @@ The root URL and `/api/health` use the same health handler.
 | GET    | `/`       | Public | `{ "status": "ok", "app": "<APP_NAME>" }` |
 | GET    | `/health` | Public | `{ "status": "ok", "app": "<APP_NAME>" }` |
 
-Authentication requests are rate-limited at 10 attempts per client IP every 15 minutes.
+Login requests are rate-limited at 10 attempts per client IP every 15 minutes.
 New passwords must be at least 8 characters and no more than 72 UTF-8 bytes, matching bcrypt's
 input limit. Passwords are hashed directly with bcrypt. Existing scrypt hashes and hashes from the
 earlier pre-hashed bcrypt implementation remain verifiable; compatible passwords are upgraded to
@@ -83,9 +83,14 @@ the verified token and every read, update, or delete is scoped by that user ID.
   Replacing a base CV keeps the old text as the source for existing copies.
 - `POST /tailoring/analyze` requires an owned application and saved base CV. It uses the
   application's saved job description unless a replacement is supplied in the request. The
-  deterministic score and keyword breakdown are stored as an analysis.
+  deterministic score and keyword breakdown are stored as an analysis when at least one catalog
+  keyword is found. The fixed catalog and scoring behavior are documented in `TAILORING.md`.
 - `POST /tailoring/save` saves an unchanged snapshot of the base CV linked to that analysis and
   application. Generated rewrites and user-confirmed recommendations are not implemented yet;
   the snapshot is not represented as an AI-tailored rewrite.
 - Dashboard totals and follow-ups are computed from the authenticated application and CV list
   endpoints; there is not a separate dashboard endpoint.
+
+The tailoring implementation makes no external AI calls. The landing page currently describes
+planned privacy behavior around personal details and AI; actual AI redaction is not implemented
+because there is no AI integration.

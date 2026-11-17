@@ -10,13 +10,21 @@ Author: Mayen Akech (BIT/2024/44537). Version 0.1 (draft). Date: 10 October 2026
 
 This document says what devtrack must do, for whom, and how we know it works. The build and the implementation documentation use it. It does not change the submitted proposal.
 
+The requirements below describe the target product; they are not a claim that every feature is
+implemented. See [ROADMAP.md](./ROADMAP.md) for delivery status and [API.md](./API.md) and
+[TAILORING.md](./TAILORING.md) for current system behavior.
+
 ### 1.2 Problem
 
 Student and junior developers in Kenya apply to many jobs on many platforms. They miss deadlines and lose the status of applications. They send one generic CV to all employers, and Applicant Tracking Systems (ATS) filter generic CVs. Existing tools keep tracking and CV work apart, put key features behind a subscription, and serve foreign markets.
 
 ### 1.3 Product summary
 
-devtrack is a web application. It joins a job application tracker and a CV tailoring tool. The user compares a CV with a job description. The system shows a match score, the missing keywords, and recommendations. The user saves a tailored CV that is linked to the application.
+The target product is a web application joining a job application tracker and a CV tailoring
+tool. The implemented system tracks applications, accepts a base CV, compares it with a job
+description, and shows a deterministic match score and missing keywords. Saving the result
+currently creates an unchanged CV snapshot linked to the application and source CV; it does not
+generate a rewritten tailored CV.
 
 ### 1.4 Working title
 
@@ -89,6 +97,9 @@ These items are not in the submitted proposal. Record them in the implementation
 
 Priority: P0 is required for the first release. P1 is needed before evaluation. P2 is optional. "Proposal" shows the matching requirement in Table 4.1 of the proposal.
 
+The acceptance criteria in this section define the target requirements. Their implementation
+status is tracked in [ROADMAP.md](./ROADMAP.md).
+
 ### 5.1 Accounts
 
 | ID    | Requirement                             | Priority | Proposal | Acceptance criteria                                                       |
@@ -148,32 +159,39 @@ Priority: P0 is required for the first release. P1 is needed before evaluation. 
 | DSH-4 | Show a summary by status and platform, and the tailoring history | P1       | FR9      | The user can export it as CSV.      |
 | DSH-5 | Send follow-up reminders by email                                | P2       | FR8      | Needs an email service.             |
 
-## 6. Tailoring design
+## 6. Target tailoring design
+
+This section describes the intended future tailoring flow. The current deterministic analysis
+and snapshot-save behavior is specified in [TAILORING.md](./TAILORING.md).
 
 ### 6.1 Principle
 
-The score must be explainable. Code calculates the score from keywords. The AI service helps in two places only: it extracts keywords, and it suggests rewrites. The AI service does not decide the score.
+The score must be explainable and computed by code, not an AI service. An AI service may help
+extract keywords and suggest rewrites, but must not decide the score.
 
-### 6.2 Process
+### 6.2 Intended process
 
 1. The server reads the job description and the base CV text.
 2. The server removes contact details from the CV text.
-3. The AI service extracts keywords from the job description. Each keyword is required or preferred. If the AI service is down, a built-in skills list does this step.
+3. The AI service extracts keywords from the job description. Each keyword is required or preferred. If the AI service is unavailable, the built-in skills list does this step.
 4. The server normalizes keywords with an alias list (for example, "JS" and "JavaScript", or "Node" and "Node.js").
 5. The server checks which keywords appear in the CV.
 6. The server calculates the score.
 7. The AI service suggests rewrites for lines that can include a missing keyword. The user accepts or rejects each one.
 8. The server saves the tailored CV, the score, and the recommendations.
 
-### 6.3 Score
+Steps involving AI, personal-data redaction, generated rewrites, and user confirmation are not
+implemented. Current keyword extraction uses the fixed catalog documented in `TAILORING.md`.
+
+### 6.3 Target score
 
 Score = 100 x (weight of matched keywords) / (weight of all keywords). A required keyword has weight 2. A preferred keyword has weight 1.
 
-Example: a job has 6 required and 4 preferred keywords. The CV matches 4 required and 2 preferred. Matched weight = 4 x 2 + 2 x 1 = 10. Total weight = 6 x 2 + 4 x 1 = 16. Score = 62.
+Example: a job has 6 required and 4 preferred keywords. The CV matches 4 required and 2 preferred. Matched weight = 4 x 2 + 2 x 1 = 10. Total weight = 6 x 2 + 4 x 1 = 16. Rounded score = 63.
 
 Score bands use the brand colors: 0 to 49 is Gap, 50 to 74 is Score, 75 to 100 is Match.
 
-### 6.4 Rules for the AI service
+### 6.4 Rules for any future AI service
 
 - Return JSON only, with a fixed schema.
 - Never invent experience, employers, dates, or qualifications.
@@ -192,11 +210,15 @@ Score bands use the brand colors: 0 to 49 is Gap, 50 to 74 is Score, 75 to 100 i
 
 Every query must filter by `userId`. The original uploaded file is not stored. The system keeps only the extracted text.
 
+In the current implementation, a recommendation record is created for a successful analysis, not
+for each saved CV. Saving an analysis snapshot creates a separate resume record.
+
 ## 8. API
 
-All routes start with `/api`. All routes except health, register, and login need a valid token.
+Implemented routes start with `/api`. Health, registration, and login are public; all other
+implemented routes require a valid token. See [API.md](./API.md) for the current route contract.
 
-| Area         | Routes                                                                                                     |
+| Area         | Target routes (some are not implemented; see `API.md` for current routes)                                  |
 | ------------ | ---------------------------------------------------------------------------------------------------------- |
 | Health       | GET /health                                                                                                |
 | Auth         | POST /auth/register, POST /auth/login, GET /auth/me, POST /auth/forgot-password, POST /auth/reset-password |
@@ -204,6 +226,9 @@ All routes start with `/api`. All routes except health, register, and login need
 | Resumes      | POST /resumes/base (upload). GET /resumes. GET, DELETE /resumes/:id. GET /resumes/:id/download             |
 | Tailoring    | POST /tailoring/analyze. POST /tailoring/save                                                              |
 | Dashboard    | GET /dashboard. GET /reports/summary                                                                       |
+
+This is the target route inventory, not a list of live endpoints. Password reset, resume
+download, dashboard, and reports routes are not implemented.
 
 ## 9. UX and design requirements
 
@@ -241,13 +266,13 @@ Landing, Registration, Login, Dashboard, Job Application Management (Kanban and 
 
 The system has three tiers: presentation, application, and data.
 
-| Layer        | Technology                                                              |
-| ------------ | ----------------------------------------------------------------------- |
-| Presentation | React, Vite, Tailwind CSS, React Router                                 |
-| Application  | Node.js, Express, JWT, bcrypt                                           |
-| Data         | MongoDB, Mongoose                                                       |
-| AI           | An external API (OpenAI or Gemini). Decision open.                      |
-| File parsing | A PDF text library and a DOCX text library. Choose in the Resumes step. |
+| Layer        | Technology                                                               |
+| ------------ | ------------------------------------------------------------------------ |
+| Presentation | React, Vite, Tailwind CSS, React Router                                  |
+| Application  | Node.js, Express, JWT, bcrypt                                            |
+| Data         | MongoDB, Mongoose                                                        |
+| AI           | No external AI provider is integrated; provider selection is still open. |
+| File parsing | `pdf-parse` for PDF; `fflate` and `@xmldom/xmldom` for DOCX.             |
 
 The repository is one monorepo with `client/` and `server/` folders. The scaffold is complete.
 

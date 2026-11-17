@@ -1,6 +1,7 @@
 # ROADMAP
 
-Status: `[ ]` not started, `[~]` in progress, `[x]` done.
+Status: `[ ]` not started, `[~]` in progress, `[x]` done. These marks track implementation
+work; they do not imply deployment or user evaluation.
 IDs match the PRD. Work in the order below. Finish each step before the next.
 
 ## Step 1. Scaffold and models
@@ -48,7 +49,8 @@ IDs match the PRD. Work in the order below. Finish each step before the next.
 - [ ] TAI-7 User-confirmed recommendations before rewriting
 - [x] TAI-8 Deterministic analysis works without an AI service
 - [ ] TAI-9 Remove personal data before AI calls
-- Exit: the test vectors in `docs/TAILORING.md` pass. The flow works with the AI service turned off.
+- Exit: deterministic keyword extraction and scoring are covered by tests. No AI service is
+  integrated; the core analysis runs locally on the server without an AI dependency.
 
 ## Step 6. Dashboard and reminders
 
@@ -74,7 +76,7 @@ IDs match the PRD. Work in the order below. Finish each step before the next.
 
 ## Step 8. Testing and evaluation
 
-- [~] MongoDB-backed system test covers registration, application tracking, DOCX upload, analysis, and saved snapshot; genuine rewriting remains untestable until TAI-6 and TAI-7
+- [x] MongoDB-backed system test is implemented for registration, application tracking, DOCX upload, analysis, and saving an unchanged snapshot. Run `npm run test:system -w server` with a disposable `TEST_MONGODB_URI`; generated rewriting is not covered because TAI-6 and TAI-7 are not implemented.
 - [ ] User acceptance test and SUS questionnaire
 - [ ] Record results for the report
 

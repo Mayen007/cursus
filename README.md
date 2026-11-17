@@ -4,7 +4,7 @@ A web app for managing job applications and tailoring a CV to each opportunity.
 
 ## Requirements
 
-- Node.js 22 or later
+- Node.js 20 or later
 - npm
 - MongoDB running locally or a MongoDB Atlas connection string
 
